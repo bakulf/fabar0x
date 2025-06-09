@@ -92,7 +92,12 @@ export default function App() {
         keyExtractor={item => item.id}
         renderItem={renderItem}
       />
-      <Modal visible={!!nfcStatus} transparent animationType="fade">
+      <Modal
+        visible={!!nfcStatus}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setNfcStatus(null)}
+      >
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
             {nfcStatus === 'writing' && <ActivityIndicator size="large" />}
