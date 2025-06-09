@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { Modal, ActivityIndicator, StatusBar } from 'react-native';
 import {
   View, Text, FlatList, TextInput, StyleSheet,
@@ -12,6 +12,7 @@ export default function App() {
   const [filtered, setFiltered] = useState([]);
   const [nfcStatus, setNfcStatus] = useState(null);
   const [nfcMessage, setNfcMessage] = useState('');
+  const cancelRef = useRef(false);
 
   useEffect(() => {
     NfcManager.start();
@@ -27,8 +28,16 @@ export default function App() {
     );
   }, [search]);
 
+  const handleClose = () => {
+    cancelRef.current = true;
+    NfcManager.cancelTechnologyRequest().catch(() => {});
+    setNfcStatus(null);
+  };
+
   const writeTag = async (id) => {
     const code = `02190530${id}00`;
+
+    cancelRef.current = false;
 
     setNfcStatus('waiting');
     setNfcMessage('Hold an NFC tag near your device');
@@ -47,11 +56,17 @@ export default function App() {
       setNfcStatus('success');
       setNfcMessage('✅ Tag written successfully!');
     } catch (e) {
-      setNfcStatus('error');
-      setNfcMessage('❌ Error writing to tag: ' + (e.message ?? 'Unknown error'));
+      if (!cancelRef.current) {
+        setNfcStatus('error');
+        setNfcMessage('❌ Error writing to tag: ' + (e.message ?? 'Unknown error'));
+      }
     } finally {
       NfcManager.cancelTechnologyRequest().catch(() => {});
-      setTimeout(() => setNfcStatus(null), 2000);
+      if (!cancelRef.current) {
+        setTimeout(() => setNfcStatus(null), 2000);
+      } else {
+        cancelRef.current = false;
+      }
     }
   };
 
@@ -96,7 +111,7 @@ export default function App() {
         visible={!!nfcStatus}
         transparent
         animationType="fade"
-        onRequestClose={() => setNfcStatus(null)}
+        onRequestClose={handleClose}
       >
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
