@@ -117,10 +117,6 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     resizeMode: 'contain',
   },
-  input: {
-    height: 40, borderColor: '#ccc', borderWidth: 1,
-    margin: 10, paddingHorizontal: 10, borderRadius: 8
-  },
   item: {
     padding: 16,
     borderBottomColor: '#eee',
