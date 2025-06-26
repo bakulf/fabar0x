@@ -73,6 +73,8 @@ export default function App() {
     setNfcMessage('Hold an NFC tag near your device');
 
     try {
+      // ensure no ongoing scan events interfere with the write flow
+      await NfcManager.unregisterTagEvent().catch(() => {});
       await NfcManager.requestTechnology(NfcTech.Ndef);
 
       setNfcStatus('writing');
