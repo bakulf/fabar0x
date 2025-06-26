@@ -12,12 +12,42 @@ export default function App() {
   const [filtered, setFiltered] = useState([]);
   const [nfcStatus, setNfcStatus] = useState(null);
   const [nfcMessage, setNfcMessage] = useState('');
+  const [highlightedId, setHighlightedId] = useState(null);
+  const listRef = useRef(null);
   const cancelRef = useRef(false);
 
   useEffect(() => {
     NfcManager.start();
     setFiltered(storiesData);
   }, []);
+
+  useEffect(() => {
+    if (nfcStatus) {
+      NfcManager.unregisterTagEvent().catch(() => {});
+      return;
+    }
+
+    NfcManager.registerTagEvent(async tag => {
+      try {
+        const record = tag.ndefMessage?.[0];
+        if (!record) return;
+        const text = Ndef.text.decodePayload(record.payload);
+        const match = text.match(/^02190530(.*)00$/);
+        const id = match?.[1];
+        if (!id) return;
+        const index = storiesData.findIndex(item => item.id === id);
+        if (index !== -1) {
+          setHighlightedId(id);
+          listRef.current?.scrollToIndex({ index, animated: true });
+          setTimeout(() => setHighlightedId(null), 2000);
+        }
+      } catch {}
+    }).catch(() => {});
+
+    return () => {
+      NfcManager.unregisterTagEvent().catch(() => {});
+    };
+  }, [nfcStatus]);
 
   useEffect(() => {
     const term = search.toLowerCase();
@@ -79,7 +109,13 @@ export default function App() {
   };
 
   const renderItem = ({ item }) => (
-    <TouchableOpacity onPress={() => writeTag(item.id)} style={styles.item}>
+    <TouchableOpacity
+      onPress={() => writeTag(item.id)}
+      style={[
+        styles.item,
+        highlightedId === item.id && styles.highlight,
+      ]}
+    >
       <Text
         style={styles.title}
         numberOfLines={1}
@@ -103,6 +139,7 @@ export default function App() {
         style={styles.input}
       />
       <FlatList
+        ref={listRef}
         data={filtered}
         keyExtractor={item => item.id}
         renderItem={renderItem}
@@ -137,10 +174,6 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     resizeMode: 'contain',
   },
-  input: {
-    height: 40, borderColor: '#ccc', borderWidth: 1,
-    margin: 10, paddingHorizontal: 10, borderRadius: 8
-  },
   item: {
     padding: 16,
     borderBottomColor: '#eee',
@@ -148,6 +181,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+  },
+  highlight: {
+    backgroundColor: '#fffa8b',
   },
   title: {
     fontSize: 16,
