@@ -26,6 +26,7 @@ export default function App() {
   const [selectedId, setSelectedId] = useState(null);
   const flatListRef = useRef(null);
   const cancelRef = useRef(false);
+  const highlightTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     NfcManager.start();
@@ -40,6 +41,14 @@ export default function App() {
       )
     );
   }, [search]);
+
+  useEffect(() => {
+    return () => {
+      if (highlightTimeoutRef.current) {
+        clearTimeout(highlightTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const handleClose = () => {
     cancelRef.current = true;
@@ -104,6 +113,12 @@ export default function App() {
 
       setReadVisible(false);
       setSelectedId(readId);
+      if (highlightTimeoutRef.current) {
+        clearTimeout(highlightTimeoutRef.current);
+      }
+      highlightTimeoutRef.current = setTimeout(() => {
+        setSelectedId(null);
+      }, 2000);
       setSearch('');
       setFiltered(storiesData);
       setTimeout(() => {
