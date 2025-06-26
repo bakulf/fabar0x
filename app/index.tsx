@@ -126,10 +126,12 @@ export default function App() {
   };
 
   const languageFlags = {
-    Italian: '🇮🇹',
+    Catalan: '🇦🇩',
     English: '🇬🇧',
     French: '🇫🇷',
-    German: '🇩🇪',
+    Italian: '🇮🇹',
+    Latam: '🇲🇽',
+    Neutral: '🏳️',
     Spanish: '🇪🇸',
   };
 
